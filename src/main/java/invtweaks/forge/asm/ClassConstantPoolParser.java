@@ -22,28 +22,68 @@
 package invtweaks.forge.asm;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.objectweb.asm.Opcodes;
 
 /**
- * Using this class to search for a String reference is > 40 times faster than parsing a class with a ClassReader +
- * ClassNode while using way less RAM
+ * Using this class to search for a (single) String reference is > 40 times faster than parsing a class with a
+ * ClassReader + ClassNode while using way less RAM
  */
 public class ClassConstantPoolParser {
 
-    private static final int UTF8 = 1;
-    private static final int INT = 3;
-    private static final int FLOAT = 4;
-    private static final int LONG = 5;
-    private static final int DOUBLE = 6;
-    private static final int FIELD = 9;
-    private static final int METH = 10;
-    private static final int IMETH = 11;
-    private static final int NAME_TYPE = 12;
-    private static final int HANDLE = 15;
-    private static final int INDY = 18;
+    /** The tag value of CONSTANT_Class_info JVMS structures. */
+    private static final int CONSTANT_CLASS_TAG = 7;
 
-    private final byte[][] BYTES_TO_SEARCH;
+    /** The tag value of CONSTANT_Fieldref_info JVMS structures. */
+    private static final int CONSTANT_FIELDREF_TAG = 9;
+
+    /** The tag value of CONSTANT_Methodref_info JVMS structures. */
+    private static final int CONSTANT_METHODREF_TAG = 10;
+
+    /** The tag value of CONSTANT_InterfaceMethodref_info JVMS structures. */
+    private static final int CONSTANT_INTERFACE_METHODREF_TAG = 11;
+
+    /** The tag value of CONSTANT_String_info JVMS structures. */
+    private static final int CONSTANT_STRING_TAG = 8;
+
+    /** The tag value of CONSTANT_Integer_info JVMS structures. */
+    private static final int CONSTANT_INTEGER_TAG = 3;
+
+    /** The tag value of CONSTANT_Float_info JVMS structures. */
+    private static final int CONSTANT_FLOAT_TAG = 4;
+
+    /** The tag value of CONSTANT_Long_info JVMS structures. */
+    private static final int CONSTANT_LONG_TAG = 5;
+
+    /** The tag value of CONSTANT_Double_info JVMS structures. */
+    private static final int CONSTANT_DOUBLE_TAG = 6;
+
+    /** The tag value of CONSTANT_NameAndType_info JVMS structures. */
+    private static final int CONSTANT_NAME_AND_TYPE_TAG = 12;
+
+    /** The tag value of CONSTANT_Utf8_info JVMS structures. */
+    private static final int CONSTANT_UTF8_TAG = 1;
+
+    /** The tag value of CONSTANT_MethodHandle_info JVMS structures. */
+    private static final int CONSTANT_METHOD_HANDLE_TAG = 15;
+
+    /** The tag value of CONSTANT_MethodType_info JVMS structures. */
+    private static final int CONSTANT_METHOD_TYPE_TAG = 16;
+
+    /** The tag value of CONSTANT_Dynamic_info JVMS structures. */
+    private static final int CONSTANT_DYNAMIC_TAG = 17;
+
+    /** The tag value of CONSTANT_InvokeDynamic_info JVMS structures. */
+    private static final int CONSTANT_INVOKE_DYNAMIC_TAG = 18;
+
+    /** The tag value of CONSTANT_Module_info JVMS structures. */
+    private static final int CONSTANT_MODULE_TAG = 19;
+
+    /** The tag value of CONSTANT_Package_info JVMS structures. */
+    private static final int CONSTANT_PACKAGE_TAG = 20;
+
+    private byte[][] BYTES_TO_SEARCH;
 
     public ClassConstantPoolParser(String... strings) {
         BYTES_TO_SEARCH = new byte[strings.length][];
@@ -52,55 +92,83 @@ public class ClassConstantPoolParser {
         }
     }
 
+    public void addString(String string) {
+        BYTES_TO_SEARCH = Arrays.copyOf(BYTES_TO_SEARCH, BYTES_TO_SEARCH.length + 1);
+        BYTES_TO_SEARCH[BYTES_TO_SEARCH.length - 1] = string.getBytes(StandardCharsets.UTF_8);
+    }
+
     /**
-     * Returns true if the constant pool of the class represented by this byte array contains the String we are looking
-     * for
+     * Returns true if the constant pool of the class represented by this byte array contains one of the Strings we are
+     * looking for
      */
-    public boolean parse(byte[] basicClass) {
+    public boolean find(byte[] basicClass) {
+        return find(basicClass, false);
+    }
+
+    private static final int V24 = 68;
+
+    /**
+     * Returns true if the constant pool of the class represented by this byte array contains one of the Strings we are
+     * looking for.
+     *
+     * @param prefixes If true, it is enough for a constant pool entry to <i>start</i> with one of our Strings to count
+     *                 as a match - otherwise, the entire String has to match.
+     */
+    public boolean find(byte[] basicClass, boolean prefixes) {
         if (basicClass == null || basicClass.length == 0) {
             return false;
         }
         // checks the class version
-        if (readShort(6, basicClass) > Opcodes.V1_8) {
+        if (readShort(6, basicClass) > V24) {
             return false;
         }
         // parses the constant pool
-        int n = readUnsignedShort(8, basicClass);
+        final int n = readUnsignedShort(8, basicClass);
         int index = 10;
         for (int i = 1; i < n; ++i) {
-            int size;
+            final int size;
             switch (basicClass[index]) {
-                case FIELD:
-                case METH:
-                case IMETH:
-                case INT:
-                case FLOAT:
-                case NAME_TYPE:
-                case INDY:
+                case CONSTANT_FIELDREF_TAG:
+                case CONSTANT_METHODREF_TAG:
+                case CONSTANT_INTERFACE_METHODREF_TAG:
+                case CONSTANT_INTEGER_TAG:
+                case CONSTANT_FLOAT_TAG:
+                case CONSTANT_NAME_AND_TYPE_TAG:
+                case CONSTANT_DYNAMIC_TAG:
+                case CONSTANT_INVOKE_DYNAMIC_TAG:
                     size = 5;
                     break;
-                case LONG:
-                case DOUBLE:
+                case CONSTANT_LONG_TAG:
+                case CONSTANT_DOUBLE_TAG:
                     size = 9;
                     ++i;
                     break;
-                case UTF8:
+                case CONSTANT_UTF8_TAG:
                     final int strLen = readUnsignedShort(index + 1, basicClass);
                     size = 3 + strLen;
-                    label: for (byte[] bytes : BYTES_TO_SEARCH) {
-                        if (strLen == bytes.length) {
-                            for (int j = index + 3; j < index + 3 + strLen; j++) {
+                    for (byte[] bytes : BYTES_TO_SEARCH) {
+                        if (prefixes ? strLen >= bytes.length : strLen == bytes.length) {
+                            boolean found = true;
+                            for (int j = index + 3; j < index + 3 + bytes.length; j++) {
                                 if (basicClass[j] != bytes[j - (index + 3)]) {
-                                    continue label;
+                                    found = false;
+                                    break;
                                 }
                             }
-                            return true;
+                            if (found) {
+                                return true;
+                            }
                         }
                     }
                     break;
-                case HANDLE:
+                case CONSTANT_METHOD_HANDLE_TAG:
                     size = 4;
                     break;
+                case CONSTANT_CLASS_TAG:
+                case CONSTANT_STRING_TAG:
+                case CONSTANT_METHOD_TYPE_TAG:
+                case CONSTANT_PACKAGE_TAG:
+                case CONSTANT_MODULE_TAG:
                 default:
                     size = 3;
                     break;

@@ -136,7 +136,7 @@ public class ContainerTransformer implements IClassTransformer {
             return classWriter.toByteArray();
         }
 
-        if (classParser.parse(basicClass)) {
+        if (classParser.find(basicClass)) {
 
             ClassReader cr = new ClassReader(basicClass);
             ClassNode cn = new ClassNode(Opcodes.ASM5);
