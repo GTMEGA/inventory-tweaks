@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.StatCollector;
 
+import lombok.val;
 import org.lwjgl.input.Keyboard;
 
 public class InvTweaksGuiShortcutsHelp extends GuiScreen {
@@ -26,7 +27,7 @@ public class InvTweaksGuiShortcutsHelp extends GuiScreen {
 
     public void initGui() {
         // Create Done button
-        List<Object> controlList = new LinkedList<Object>();
+        val controlList = new LinkedList<GuiButton>();
         controlList.add(new GuiButton(ID_DONE, width / 2 - 100, height / 6 + 168, "Done"));
         buttonList = controlList;
     }

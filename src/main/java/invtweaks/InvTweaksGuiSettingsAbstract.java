@@ -1,12 +1,11 @@
 package invtweaks;
 
-import java.util.List;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.StatCollector;
 
+import lombok.val;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.Point;
@@ -47,8 +46,7 @@ public abstract class InvTweaksGuiSettingsAbstract extends GuiScreen {
 
     @Override
     public void initGui() {
-        @SuppressWarnings("unchecked")
-        List<Object> controlList = buttonList;
+        val controlList = buttonList;
         Point p = new Point();
         moveToButtonCoords(1, p);
         controlList.add(new GuiButton(ID_DONE, p.getX() + 55, height / 6 + 168, LABEL_DONE)); // GuiButton

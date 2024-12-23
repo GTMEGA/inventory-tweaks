@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.logging.Level;
 
@@ -23,6 +24,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 
+import lombok.val;
+import lombok.var;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.LWJGLException;
@@ -640,12 +643,12 @@ public class InvTweaks extends InvTweaksObfuscation {
         int focusedSlot = getFocusedSlot() + 27; // Convert to container slots index
         InvTweaksConfig config = cfgManager.getConfig();
 
-        if (!ObjectUtils.equals(currentStackId, storedStackId) || currentStackDamage != storedStackDamage) {
+        if (!Objects.equals(currentStackId, storedStackId) || currentStackDamage != storedStackDamage) {
 
             if (storedFocusedSlot != focusedSlot) { // Filter selection change
                 storedFocusedSlot = focusedSlot;
             } else if (currentStack == null
-                    || (currentStack.getItem() == Items.bowl && ObjectUtils.equals(storedStackId, "mushroom_stew"))
+                    || (currentStack.getItem() == Items.bowl && Objects.equals(storedStackId, "mushroom_stew"))
 
                             // Handle eaten mushroom soup
                             && (getCurrentScreen() == null || // Filter open inventory or other window
@@ -815,20 +818,15 @@ public class InvTweaks extends InvTweaksObfuscation {
             // Look for the mods buttons
             boolean customButtonsAdded = false;
 
-            @SuppressWarnings("unchecked")
-            List<Object> controlList = guiContainer.buttonList;
-            @SuppressWarnings("unchecked")
-            List<Object> toRemove = new ArrayList<Object>();
-            for (Object o : controlList) {
-                if (isGuiButton(o)) {
-                    GuiButton button = (GuiButton) o;
-                    if (button.id >= InvTweaksConst.JIMEOWAN_ID && button.id < (InvTweaksConst.JIMEOWAN_ID + 4)) {
-                        if (relayout) {
-                            toRemove.add(button);
-                        } else {
-                            customButtonsAdded = true;
-                            break;
-                        }
+            var controlList = guiContainer.buttonList;
+            var toRemove = new ArrayList<GuiButton>();
+            for (var button : controlList) {
+                if (button.id >= InvTweaksConst.JIMEOWAN_ID && button.id < (InvTweaksConst.JIMEOWAN_ID + 4)) {
+                    if (relayout) {
+                        toRemove.add(button);
+                    } else {
+                        customButtonsAdded = true;
+                        break;
                     }
                 }
             }
@@ -938,16 +936,12 @@ public class InvTweaks extends InvTweaksObfuscation {
         } else {
             // Remove "..." button from non-survival tabs of the creative screen
             if (isGuiInventoryCreative(guiContainer)) {
-                @SuppressWarnings("unchecked")
-                List<Object> controlList = guiContainer.buttonList;
+                val controlList = guiContainer.buttonList;
                 GuiButton buttonToRemove = null;
-                for (Object o : controlList) {
-                    if (isGuiButton(o)) {
-                        // GuiButton
-                        if (((GuiButton) o).id == InvTweaksConst.JIMEOWAN_ID) {
-                            buttonToRemove = (GuiButton) o;
-                            break;
-                        }
+                for (val button : controlList) {
+                    if (button.id == InvTweaksConst.JIMEOWAN_ID) {
+                        buttonToRemove = button;
+                        break;
                     }
                 }
                 if (buttonToRemove != null) {

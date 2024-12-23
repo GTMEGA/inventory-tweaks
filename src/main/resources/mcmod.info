@@ -4,7 +4,7 @@
     "description": "Tweaks to inventory handling for ease of use, including sorting and automatic replacement of broken tools or exhausted stacks of items.",
     "version": "${modVersion}",
     "mcversion": "${minecraftVersion}",
-    "url": "https://github.com/GTNewHorizons/inventory-tweaks",
+    "url": "https://github.com/GTMEGA/inventory-tweaks",
     "updateUrl": "",
     "authors": [ "Jimeo Wan", "Kobata" ],
     "credits": "By Jimeo Wan, updated for Forge by Kobata",

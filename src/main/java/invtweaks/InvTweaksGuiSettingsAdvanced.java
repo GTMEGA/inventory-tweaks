@@ -1,13 +1,13 @@
 package invtweaks;
 
 import java.awt.Desktop;
-import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.StatCollector;
 
+import lombok.val;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.util.Point;
 
@@ -49,8 +49,7 @@ public class InvTweaksGuiSettingsAdvanced extends InvTweaksGuiSettingsAbstract {
     public void initGui() {
         super.initGui();
 
-        @SuppressWarnings("unchecked")
-        List<Object> controlList = buttonList;
+        val controlList = buttonList;
         Point p = new Point();
         int i = 0;
 
@@ -114,14 +113,11 @@ public class InvTweaksGuiSettingsAdvanced extends InvTweaksGuiSettingsAbstract {
 
         // Check if links to files are supported, if not disable the buttons
         if (!Desktop.isDesktopSupported()) {
-            for (Object o : controlList) {
-                if (obf.isGuiButton(o)) {
-                    GuiButton button = (GuiButton) o;
+            for (val button : controlList) {
+                // GuiButton
+                if (button.id == ID_EDITSHORTCUTS) {
                     // GuiButton
-                    if (button.id == ID_EDITSHORTCUTS) {
-                        // GuiButton
-                        button.enabled = false;
-                    }
+                    button.enabled = false;
                 }
             }
         }
